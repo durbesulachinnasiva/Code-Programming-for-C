@@ -1,0 +1,46 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+// Helper function to sort in descending order (for optimization)
+int cmp(const void *a, const void *b) {
+    return (*(int*)b - *(int*)a);
+}
+
+// DFS function to try placing sticks into sides
+bool dfs(int* sides, int index, int* matchsticks, int matchsticksSize, int target) {
+    if (index == matchsticksSize) {
+        return sides[0] == target && sides[1] == target && sides[2] == target && sides[3] == target;
+    }
+
+    for (int i = 0; i < 4; i++) {
+        if (sides[i] + matchsticks[index] > target) continue;
+
+        sides[i] += matchsticks[index];
+        if (dfs(sides, index + 1, matchsticks, matchsticksSize, target))
+            return true;
+        sides[i] -= matchsticks[index];
+
+        if (sides[i] == 0) break; // optimization to avoid symmetric states
+    }
+
+    return false;
+}
+
+bool makesquare(int* matchsticks, int matchsticksSize){
+    if (matchsticksSize < 4) return false;
+
+    int sum = 0;
+    for (int i = 0; i < matchsticksSize; i++)
+        sum += matchsticks[i];
+
+    if (sum % 4 != 0) return false;
+
+    int target = sum / 4;
+
+    // Sort matchsticks in descending order
+    qsort(matchsticks, matchsticksSize, sizeof(int), cmp);
+
+    int sides[4] = {0, 0, 0, 0};
+    return dfs(sides, 0, matchsticks, matchsticksSize, target);
+}
