@@ -1,0 +1,30 @@
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
+
+bool isValid(char* s) {
+    int len = strlen(s);
+    char *stack = (char *)malloc(len * sizeof(char));
+    int top = -1;
+
+    for (int i = 0; i < len; i++) {
+        char c = s[i];
+
+        // Push expected closing bracket
+        if (c == '(') stack[++top] = ')';
+        else if (c == '{') stack[++top] = '}';
+        else if (c == '[') stack[++top] = ']';
+        else {
+            // If stack empty or doesn't match
+            if (top == -1 || stack[top] != c) {
+                free(stack);
+                return false;
+            }
+            top--;
+        }
+    }
+
+    bool valid = (top == -1);
+    free(stack);
+    return valid;
+}
