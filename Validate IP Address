@@ -1,0 +1,81 @@
+char* validIPAddress(char* queryIP) {
+    int len = strlen(queryIP);
+
+    // Helper lambda-like functions
+    int isIPv4Block(char* s, int start, int end) {
+        if (start > end) return 0;
+        if (end - start + 1 > 3) return 0;
+
+        // No leading zero unless the block is exactly "0"
+        if (s[start] == '0' && start != end) return 0;
+
+        int num = 0;
+        for (int i = start; i <= end; i++) {
+            if (s[i] < '0' || s[i] > '9') return 0;
+            num = num * 10 + (s[i] - '0');
+        }
+        return num <= 255;
+    }
+
+    int isIPv6Block(char* s, int start, int end) {
+        if (start > end) return 0;
+        if (end - start + 1 > 4) return 0;
+
+        for (int i = start; i <= end; i++) {
+            char c = s[i];
+            if (!((c >= '0' && c <= '9') ||
+                  (c >= 'a' && c <= 'f') ||
+                  (c >= 'A' && c <= 'F')))
+                return 0;
+        }
+        return 1;
+    }
+
+    // Check if IPv4 (has '.')
+    if (strchr(queryIP, '.') != NULL) {
+        int dotCount = 0;
+        for (int i = 0; i < len; i++)
+            if (queryIP[i] == '.') dotCount++;
+
+        if (dotCount != 3) return "Neither";
+
+        int start = 0, blocks = 0;
+        for (int i = 0; i <= len; i++) {
+            if (queryIP[i] == '.' || queryIP[i] == '\0') {
+                if (!isIPv4Block(queryIP, start, i - 1))
+                    return "Neither";
+
+                blocks++;
+                start = i + 1;
+            }
+        }
+
+        if (blocks == 4) return "IPv4";
+        return "Neither";
+    }
+
+    // Check if IPv6 (has ':')
+    if (strchr(queryIP, ':') != NULL) {
+        int colonCount = 0;
+        for (int i = 0; i < len; i++)
+            if (queryIP[i] == ':') colonCount++;
+
+        if (colonCount != 7) return "Neither";
+
+        int start = 0, blocks = 0;
+        for (int i = 0; i <= len; i++) {
+            if (queryIP[i] == ':' || queryIP[i] == '\0') {
+                if (!isIPv6Block(queryIP, start, i - 1))
+                    return "Neither";
+
+                blocks++;
+                start = i + 1;
+            }
+        }
+
+        if (blocks == 8) return "IPv6";
+        return "Neither";
+    }
+
+    return "Neither";
+}
