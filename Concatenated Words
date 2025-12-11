@@ -1,0 +1,99 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define ALPHABET_SIZE 26
+#define MAX_WORD_LEN 31
+
+typedef struct TrieNode {
+    struct TrieNode *children[ALPHABET_SIZE];
+    bool isWord;
+} TrieNode;
+
+TrieNode* createNode() {
+    TrieNode *node = (TrieNode *)malloc(sizeof(TrieNode));
+    node->isWord = false;
+    for (int i = 0; i < ALPHABET_SIZE; i++)
+        node->children[i] = NULL;
+    return node;
+}
+
+void insertTrie(TrieNode *root, char *word) {
+    TrieNode *p = root;
+    for (int i = 0; word[i]; i++) {
+        int idx = word[i] - 'a';
+        if (!p->children[idx])
+            p->children[idx] = createNode();
+        p = p->children[idx];
+    }
+    p->isWord = true;
+}
+
+bool searchTrie(TrieNode *root, char *word, int start, int end) {
+    TrieNode *p = root;
+    for (int i = start; i < end; i++) {
+        int idx = word[i] - 'a';
+        if (!p->children[idx])
+            return false;
+        p = p->children[idx];
+    }
+    return p->isWord;
+}
+
+bool canFormWord(TrieNode *root, char *word) {
+    int n = strlen(word);
+    if (n == 0) return false;
+
+    bool dp[n+1];
+    for (int i = 0; i <= n; i++) dp[i] = false;
+    dp[0] = true;
+
+    for (int i = 1; i <= n; i++) {
+        for (int j = 0; j < i; j++) {
+            if (dp[j] && searchTrie(root, word, j, i)) {
+                if (!(j == 0 && i == n)) // do not use whole word itself
+                    dp[i] = true;
+            }
+            if (dp[i]) break;
+        }
+    }
+    return dp[n];
+}
+
+void freeTrie(TrieNode *root) {
+    if (!root) return;
+    for (int i = 0; i < ALPHABET_SIZE; i++)
+        freeTrie(root->children[i]);
+    free(root);
+}
+
+int cmpStrLen(const void *a, const void *b) {
+    char *s1 = *(char **)a;
+    char *s2 = *(char **)b;
+    return strlen(s1) - strlen(s2);
+}
+
+char **findAllConcatenatedWordsInADict(char **words, int wordsSize, int *returnSize) {
+    *returnSize = 0;
+    char **result = (char **)malloc(wordsSize * sizeof(char *));
+    if (wordsSize == 0) return result;
+
+    // Sort words by length
+    qsort(words, wordsSize, sizeof(char *), cmpStrLen);
+
+    TrieNode *root = createNode();
+
+    for (int i = 0; i < wordsSize; i++) {
+        if (strlen(words[i]) == 0) continue;
+
+        if (canFormWord(root, words[i])) {
+            result[*returnSize] = words[i];
+            (*returnSize)++;
+        }
+        insertTrie(root, words[i]);
+    }
+
+    freeTrie(root);
+    return result;
+}
